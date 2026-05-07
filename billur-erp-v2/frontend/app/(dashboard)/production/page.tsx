@@ -217,9 +217,9 @@ export default function ProductionPage() {
                     <p className="text-sm text-muted-foreground">
                       {order.client} • {order.model}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {order.quantity.toLocaleString()} pcs{order.productionLine ? ` • ${order.productionLine}` : ""}
-                    </p>
+                   <p className="text-xs text-muted-foreground">
+  {order.quantity.toLocaleString()} pcs
+</p>
                   </div>
                   <div className="text-right space-y-2">
                     <Badge
