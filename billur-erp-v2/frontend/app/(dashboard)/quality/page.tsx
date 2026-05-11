@@ -91,6 +91,35 @@ export default function QualityPage() {
   const { data: qualityDefects = [] } = useQualityDefects()
   const { data: orders = [] } = useOrders()
   const { data: workers = [] } = useWorkers()
+
+  const getDefectType = (defect: unknown, index: number) => {
+    const record = defect as unknown as Record<string, unknown>
+
+    const value =
+      record.type ??
+      record.name ??
+      record.label ??
+      record.defect_type ??
+      record.defectType
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value
+    }
+
+    return `Defect ${index + 1}`
+  }
+
+  const normalizedQualityDefects = qualityDefects.map((defect, index) => {
+    const record = defect as unknown as Record<string, unknown>
+
+    return {
+      ...record,
+      type: getDefectType(defect, index),
+      count: Number(record.count ?? 0),
+      severity: String(record.severity ?? "Minor"),
+    }
+  })
+
   const totalInspected = recentInspections.reduce((sum, i) => sum + i.passed + i.failed, 0)
   const totalPassed = recentInspections.reduce((sum, i) => sum + i.passed, 0)
   const totalFailed = recentInspections.reduce((sum, i) => sum + i.failed, 0)
@@ -189,7 +218,7 @@ export default function QualityPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={qualityDefects}
+                    data={normalizedQualityDefects}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -198,7 +227,7 @@ export default function QualityPage() {
                     dataKey="count"
                     nameKey="type"
                   >
-                    {qualityDefects.map((entry, index) => (
+                    {normalizedQualityDefects.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={defectColors[index % defectColors.length]} />
                     ))}
                   </Pie>
@@ -438,15 +467,15 @@ export default function QualityPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {qualityDefects.map((defect, index) => (
+                  {normalizedQualityDefects.map((defect, index) => (
                     <div
-                      key={defect.type}
+                      key={`${defect.type}-${index}`}
                       className="flex items-center justify-between p-3 rounded-lg border"
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: defectColors[index] }}
+                          style={{ backgroundColor: defectColors[index % defectColors.length] }}
                         />
                         <div>
                           <p className="font-medium">{defect.type}</p>
