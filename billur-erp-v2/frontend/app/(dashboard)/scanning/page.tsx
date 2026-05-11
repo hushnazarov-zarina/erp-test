@@ -44,7 +44,7 @@ export default function ScanningPage() {
   const { data: productionStages = [] } = useProductionStages()
 
   const normalizedScanLogs = scanLogs.map((scan, index) => {
-    const record = scan as Record<string, unknown>
+   const record = scan as unknown as Record<string, unknown>
 
     return {
       id: String(record.id ?? `SCAN-${index + 1}`),
