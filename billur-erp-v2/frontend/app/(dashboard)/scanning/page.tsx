@@ -259,7 +259,7 @@ export default function ScanningPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {productionStages.map((stage, index) => {
-                    const record = stage as Record<string, unknown>
+                 const record = stage as unknown as Record<string, unknown>
                     const stageName = String(record.name ?? record.stageName ?? record.stage_name ?? `Stage ${index + 1}`)
 
                     return (
