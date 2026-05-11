@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Table,
   TableBody,
@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import {
   QrCode,
@@ -31,7 +30,6 @@ import {
   AlertTriangle,
   Package,
   User,
-  Clock,
   RefreshCw,
   Download,
   Camera,
@@ -44,6 +42,25 @@ import { useScanLogs, useProductionStages } from "@/lib/api/hooks"
 export default function ScanningPage() {
   const { data: scanLogs = [] } = useScanLogs()
   const { data: productionStages = [] } = useProductionStages()
+
+  const normalizedScanLogs = scanLogs.map((scan, index) => {
+    const record = scan as Record<string, unknown>
+
+    return {
+      id: String(record.id ?? `SCAN-${index + 1}`),
+      timestamp: String(record.timestamp ?? record.createdAt ?? record.created_at ?? "-"),
+      workerName: String(record.workerName ?? record.worker_name ?? record.worker ?? "Unknown Worker"),
+      workerId: String(record.workerId ?? record.worker_id ?? "-"),
+      boxId: String(record.boxId ?? record.box_id ?? record.box ?? "-"),
+      orderId: String(record.orderId ?? record.order_id ?? record.order ?? "-"),
+      stage: String(record.stage ?? record.stageName ?? record.stage_name ?? "-"),
+      quantity: Number(record.quantity ?? record.qty ?? 0),
+      status: String(record.status ?? "Success"),
+      warning: record.warning ? String(record.warning) : "",
+      error: record.error ? String(record.error) : "",
+    }
+  })
+
   const [scanInput, setScanInput] = useState("")
   const [lastScan, setLastScan] = useState<{
     type: string
@@ -56,7 +73,6 @@ export default function ScanningPage() {
   const handleScan = () => {
     if (!scanInput) return
 
-    // Simulate scan result
     if (scanInput.startsWith("BOX-")) {
       setLastScan({
         type: "Box",
@@ -64,11 +80,11 @@ export default function ScanningPage() {
         status: "success",
         message: "Box validated successfully",
         details: {
-          "Order": "ORD-2024-001",
-          "Model": "Summer Dress SD-401",
-          "Quantity": "50 pcs",
-          "Stage": "Packing",
-          "Worker": "Aziza Karimova",
+          Order: "ORD-2024-001",
+          Model: "Summer Dress SD-401",
+          Quantity: "50 pcs",
+          Stage: "Packing",
+          Worker: "Aziza Karimova",
         },
       })
     } else if (scanInput.startsWith("W")) {
@@ -78,10 +94,10 @@ export default function ScanningPage() {
         status: "success",
         message: "Worker ID verified",
         details: {
-          "Name": "Bobur Rahimov",
-          "Department": "Cutting",
-          "Line": "Line B",
-          "Status": "Active",
+          Name: "Bobur Rahimov",
+          Department: "Cutting",
+          Line: "Line B",
+          Status: "Active",
           "Today's Scans": "45",
         },
       })
@@ -93,12 +109,13 @@ export default function ScanningPage() {
         message: "Invalid QR code format",
       })
     }
+
     setScanInput("")
   }
 
-  const successScans = scanLogs.filter((s) => s.status === "Success").length
-  const warningScans = scanLogs.filter((s) => s.status === "Warning").length
-  const errorScans = scanLogs.filter((s) => s.status === "Error").length
+  const successScans = normalizedScanLogs.filter((s) => s.status === "Success").length
+  const warningScans = normalizedScanLogs.filter((s) => s.status === "Warning").length
+  const errorScans = normalizedScanLogs.filter((s) => s.status === "Error").length
 
   return (
     <div className="p-6 space-y-6">
@@ -127,12 +144,13 @@ export default function ScanningPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Scans Today</p>
-                <p className="text-2xl font-bold">{scanLogs.length}</p>
+                <p className="text-2xl font-bold">{normalizedScanLogs.length}</p>
               </div>
               <QrCode className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -144,6 +162,7 @@ export default function ScanningPage() {
             </div>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -155,6 +174,7 @@ export default function ScanningPage() {
             </div>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -190,7 +210,7 @@ export default function ScanningPage() {
                   Point camera at QR code
                 </p>
               </div>
-              {/* Corner brackets */}
+
               <div className="absolute top-4 left-4 w-8 h-8 border-l-4 border-t-4 border-primary rounded-tl-lg" />
               <div className="absolute top-4 right-4 w-8 h-8 border-r-4 border-t-4 border-primary rounded-tr-lg" />
               <div className="absolute bottom-4 left-4 w-8 h-8 border-l-4 border-b-4 border-primary rounded-bl-lg" />
@@ -221,6 +241,7 @@ export default function ScanningPage() {
                   <span className="text-xs">Scan Box</span>
                 </div>
               </Button>
+
               <Button variant="outline" className="h-auto py-4">
                 <div className="text-center">
                   <User className="h-6 w-6 mx-auto mb-1" />
@@ -237,11 +258,16 @@ export default function ScanningPage() {
                   <SelectValue placeholder="Select stage" />
                 </SelectTrigger>
                 <SelectContent>
-                  {productionStages.map((stage) => (
-                    <SelectItem key={stage.name} value={stage.name.toLowerCase()}>
-                      {stage.name}
-                    </SelectItem>
-                  ))}
+                  {productionStages.map((stage, index) => {
+                    const record = stage as Record<string, unknown>
+                    const stageName = String(record.name ?? record.stageName ?? record.stage_name ?? `Stage ${index + 1}`)
+
+                    return (
+                      <SelectItem key={`${stageName}-${index}`} value={stageName.toLowerCase()}>
+                        {stageName}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -281,6 +307,7 @@ export default function ScanningPage() {
                     {lastScan.status === "error" && (
                       <XCircle className="h-8 w-8 text-red-500" />
                     )}
+
                     <div>
                       <p
                         className={`font-semibold ${
@@ -328,6 +355,7 @@ export default function ScanningPage() {
                       </Button>
                     </>
                   )}
+
                   {lastScan.status === "warning" && (
                     <>
                       <Button variant="secondary" className="flex-1">
@@ -338,6 +366,7 @@ export default function ScanningPage() {
                       </Button>
                     </>
                   )}
+
                   {lastScan.status === "error" && (
                     <Button variant="outline" className="flex-1">
                       Report Problem
@@ -366,11 +395,13 @@ export default function ScanningPage() {
             </CardTitle>
             <CardDescription>Recent scan activity</CardDescription>
           </div>
+
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search scans..." className="pl-9 w-64" />
             </div>
+
             <Select defaultValue="all">
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Status" />
@@ -384,6 +415,7 @@ export default function ScanningPage() {
             </Select>
           </div>
         </CardHeader>
+
         <CardContent>
           <Table>
             <TableHeader>
@@ -399,30 +431,44 @@ export default function ScanningPage() {
                 <TableHead>Notes</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {scanLogs.map((scan) => (
+              {normalizedScanLogs.map((scan) => (
                 <TableRow key={scan.id}>
                   <TableCell className="font-mono text-sm">{scan.id}</TableCell>
+
                   <TableCell className="text-sm">{scan.timestamp}</TableCell>
+
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarFallback className="text-xs">
-                          {scan.workerName.split(" ").map((n) => n[0]).join("")}
+                          {scan.workerName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
+
                       <div>
                         <p className="text-sm font-medium">{scan.workerName}</p>
                         <p className="text-xs text-muted-foreground">{scan.workerId}</p>
                       </div>
                     </div>
                   </TableCell>
+
                   <TableCell className="font-mono">{scan.boxId}</TableCell>
+
                   <TableCell>{scan.orderId}</TableCell>
+
                   <TableCell>
                     <Badge variant="outline">{scan.stage}</Badge>
                   </TableCell>
+
                   <TableCell>{scan.quantity} pcs</TableCell>
+
                   <TableCell>
                     <Badge
                       variant="outline"
@@ -440,6 +486,7 @@ export default function ScanningPage() {
                       {scan.status}
                     </Badge>
                   </TableCell>
+
                   <TableCell className="text-sm text-muted-foreground">
                     {scan.warning || scan.error || "-"}
                   </TableCell>
